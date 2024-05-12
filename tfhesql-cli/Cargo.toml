@@ -1,0 +1,11 @@
+[package]
+name = "tfhesql-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tfhesql = { path = "../tfhesql", features=["parallel", "stats"] }
+tfhe = { version = "0.5.1", features = [ "boolean", "shortint", "integer", "x86_64-unix" ] }
+clap = { version = "4.5.4", features = ["derive"] }
+clap_derive = "4.5.4"
+
