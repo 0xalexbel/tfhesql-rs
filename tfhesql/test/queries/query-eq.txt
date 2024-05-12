@@ -1,0 +1,1 @@
+SELECT CustomerID,PostalCode,Country FROM Customers WHERE Country='Germany'
