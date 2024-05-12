@@ -5,8 +5,15 @@ A pure Rust library for executing simple FHE-encrypted SQL queries on a clear da
 
 1. Simplification: the Ast Tree is simplified to get rid of the parenthesis, +/- signs and 'Not' unary operators.
 2. Optimisation: the tree is parsed to eliminate trivial binary operations (for example: Some U8 > -1 is always true)
-3. Conversion to Binary Tree: the tree is expanded to form a perfect binary tree. 'Dummy' leaves are added to make sure the 
-tree is well formed.
+3. Conversion to Binary Tree: the tree is expanded to form a perfect binary tree with the following properties:
+- Full binary tree
+- Each node represents either a AND or a OR binary operation
+- Each leaf is a Numerical or ASCII comparison with the following properties
+```
+- Left Operand: a vector of 32 Bytes
+- Right Operand: a vector of 32 Bytes
+- Operator: Boolean Mask of len 6
+```
 
 ## Encrypted SQL Request format
 
