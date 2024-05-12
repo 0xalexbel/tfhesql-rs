@@ -12,9 +12,9 @@ use tfhesql::*;
 
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
 pub enum RunMode {
-    #[default]
     Clear,
     Trivial,
+    #[default]
     Encrypted,
 }
 
@@ -117,17 +117,9 @@ fn run_clear(
     server_tables: &OrderedTables,
     start_time: Instant,
 ) -> Result<(), FheSqlError> {
-    let start_query = Instant::now();
     let clear_sql_query = sql_client.clear_sql(sql, SqlResultOptions::best())?;
-    println!("---> BUILD QUERY {}", start_query.elapsed().as_secs_f64());
-
-    let start_runtime = Instant::now();
     let clear_sql_result = FheSqlServer::run(&clear_sql_query, server_tables)?;
-    println!("---> RUN QUERY {}", start_runtime.elapsed().as_secs_f64());
-
-    let start_csv = Instant::now();
     let csv_result = clear_sql_result.clone().into_csv().unwrap_or_default();
-    println!("---> CSV {}", start_csv.elapsed().as_secs_f64());
 
     print_duration(start_time);
     print_csv(&csv_result);
@@ -212,7 +204,9 @@ fn run<P: AsRef<Path>>(sql: &str, csv_dir: P, run_mode: RunMode) -> Result<(), F
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/// CLI Examples:
+/// cargo run --release -- --input-db ../tfhesql/test/data/tiny --query-file ../tfhesql/test/queries/query-eq.txt --mode clear
+/// cargo run --release -- --input-db ../tfhesql/test/data/numbers --query-file ../tfhesql/test/queries/query-eq-u8.txt --mode clear
 
 fn main() {
     let (query, abs_db_dir, run_mode) = parse_args();
@@ -224,8 +218,4 @@ fn main() {
             std::process::exit(1);
         }
     };
-    // Runtime: 42.24 s
-    // Clear DB query result: (some result)
-    // Encrypted DB query result: (some result)
-    // Results match: YES
 }

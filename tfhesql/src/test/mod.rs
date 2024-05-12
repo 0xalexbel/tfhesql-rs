@@ -82,6 +82,13 @@ pub fn table_customers_with_bounds(start: usize, end: usize) -> Table {
     table
 }
 
+pub fn table_customers_small() -> Table {
+    let csv_file = tfhesql_test_db_file("small", "Customers.csv");
+    let table = Table::load(&csv_file).unwrap();
+    assert_eq!(table.name(), "Customers");
+    table
+}
+
 pub fn table_categories() -> Table {
     let csv_file = tfhesql_test_db_file("medium", "Categories.csv");
     let table = Table::load(&csv_file).unwrap();
@@ -89,10 +96,10 @@ pub fn table_categories() -> Table {
     table
 }
 
-pub fn table_customers_small() -> Table {
-    let csv_file = tfhesql_test_db_file("small", "Customers.csv");
+pub fn table_numbers() -> Table {
+    let csv_file = tfhesql_test_db_file("numbers", "Numbers.csv");
     let table = Table::load(&csv_file).unwrap();
-    assert_eq!(table.name(), "Customers");
+    assert_eq!(table.name(), "Numbers");
     table
 }
 
@@ -141,6 +148,16 @@ pub fn sql_client_customers_categories() -> (FheSqlClient, OrderedTables) {
     let sql_client = FheSqlClient::new(client_server_ordered_schemas.clone()).unwrap();
     assert_eq!(sql_client.ordered_schemas(), tables.ordered_schemas());
     (sql_client, tables)
+}
+
+pub fn sql_client_numbers() -> (FheSqlClient, OrderedTables) {
+    let table = table_numbers();
+    let tables: OrderedTables = OrderedTables::new(vec![table]).unwrap();
+    let client_server_ordered_schemas = tables.ordered_schemas();
+    (
+        FheSqlClient::new(client_server_ordered_schemas.clone()).unwrap(),
+        tables,
+    )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
