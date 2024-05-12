@@ -1,0 +1,11 @@
+CustomerID:uint32,CustomerName:string,ContactName:string,Address:string,City:string,PostalCode:string,Country:string
+1,Alfreds Futterkiste,Maria Anders,Obere Str. 57,Berlin,12209,Germany
+2,Ana Trujillo Emparedados,Ana Trujillo,Avda. de la Constitucion 2222,Mexico D.F.,5021,Mexico
+3,Antonio Moreno Taqueria,Antonio Moreno,Mataderos 2312,Mexico D.F.,5023,Mexico
+4,Around the Horn,Thomas Hardy,120 Hanover Sq.,London,WA1 1DP,UK
+5,Berglunds snabbkop,Christina Berglund,Berguvsvagen 8,LuleA,S-958 22,Sweden
+6,Blauer See Delikatessen,Hanna Moos,Forsterstr. 57,Mannheim,68306,Germany
+7,Blondel pere et fils,Frederique Citeaux,24 place Kleber,Strasbourg,67000,France
+8,Bolido Comidas preparadas,Martin Sommer,C/ Araquil 67,Madrid,28023,Spain
+9,Bon app',Laurence Lebihans,12 rue des Bouchers,Marseille,13008,France
+10,Bottom-Dollar Marketse,Elizabeth Lincoln,23 Tsawassen Blvd.,Tsawassen,T2F 8M4,Canada

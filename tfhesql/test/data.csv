@@ -1,0 +1,4 @@
+Ok:bool,Name:string,Age:uint32,Revenues:uint64,Level:int16
+true,Jean,12,12300,-12
+false,Bernard,27,1400,-13
+true,DuLoft,32,256900,0

@@ -1,0 +1,2 @@
+CategoryID:uint32,CategoryName:string,Description:string
+1,Beverages,Soft drinks coffees teas

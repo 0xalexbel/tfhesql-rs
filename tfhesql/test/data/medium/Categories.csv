@@ -1,0 +1,9 @@
+CategoryID:uint32,CategoryName:string,Description:string
+1,Beverages,Soft drinks coffees teas
+2,Condiments,Sweet and savory sauces spreads
+3,Confections,Desserts candies sweet breads
+4,Dairy Products,Cheeses
+5,Grains/Cereals,Breads crackers pasta cereal
+6,Meat/Poultry,Prepared meats
+7,Produce,Dried fruit and bean curd
+8,Seafood,Seaweed and fish

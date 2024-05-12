@@ -1,0 +1,5 @@
+CategoryID:uint32,CategoryName:string,Description:string
+1,Beverages,Soft drinks coffees teas
+2,Condiments,Sweet and savory sauces spreads
+3,Confections,Desserts candies sweet breads
+4,Dairy Products,Cheeses
