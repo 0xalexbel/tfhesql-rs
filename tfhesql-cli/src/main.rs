@@ -1,5 +1,5 @@
 use std::{
-    error::Error, fs::read_to_string, io::BufWriter, path::{Path, PathBuf}, str::FromStr, time::Instant
+    error::Error, fs::read_to_string, path::{Path, PathBuf}, str::FromStr, time::Instant
 };
 
 use clap::Parser;
@@ -14,8 +14,9 @@ use tfhesql::*;
 pub enum RunMode {
     Clear,
     Trivial,
-    #[default]
     Encrypted,
+    #[default]
+    Compare,
 }
 
 impl FromStr for RunMode {
@@ -26,6 +27,7 @@ impl FromStr for RunMode {
             "clear" => Ok(RunMode::Clear),
             "trivial" => Ok(RunMode::Trivial),
             "encrypted" => Ok(RunMode::Encrypted),
+            "compare" => Ok(RunMode::Compare),
             _ => Err(()),
         }
     }
@@ -92,21 +94,7 @@ fn print_duration(start: Instant) {
 }
 
 fn print_csv(csv: &str) {
-    println!("Clear DB query result: {}", csv);
-}
-
-fn print_enc_result(_enc_sql_result: &FheSqlResult) {
-    println!("Encrypted DB query result:");
-
-    let buf = BufWriter::new(std::io::stdout());
-    _enc_sql_result.to_json(buf).unwrap_or_default();
-}
-
-fn print_clear_result(_clear_sql_result: &ClearSqlResult) {
-    println!("Encrypted DB query result:");
-
-    let buf = BufWriter::new(std::io::stdout());
-    _clear_sql_result.to_json(buf).unwrap_or_default();
+    println!("Clear DB query result:\n{}", csv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +111,6 @@ fn run_clear(
 
     print_duration(start_time);
     print_csv(&csv_result);
-    print_clear_result(&clear_sql_result);
     Ok(())
 }
 
@@ -143,7 +130,6 @@ fn run_trivial(
 
     print_duration(start_time);
     print_csv(&csv_result);
-    print_enc_result(&triv_sql_result);
     Ok(())
 }
 
@@ -162,7 +148,32 @@ fn run_enc(
 
     print_duration(start_time);
     print_csv(&csv_result);
-    print_enc_result(&enc_sql_result);
+    Ok(())
+}
+
+fn run_clear_enc(
+    sql: &str,
+    sql_client: &FheSqlClient,
+    server_tables: &OrderedTables,
+    start_time: Instant,
+    client_key: &ClientKey,
+) -> Result<(), FheSqlError> {
+    let clear_sql_query = sql_client.clear_sql(sql, SqlResultOptions::best())?;
+    let clear_sql_result = FheSqlServer::run(&clear_sql_query, server_tables)?;
+    let clear_csv_result = clear_sql_result.into_csv().unwrap_or_default();
+
+    let enc_sql_query = sql_client.encrypt_sql(sql, client_key, SqlResultOptions::best())?;
+    let enc_sql_result = FheSqlServer::run(&enc_sql_query, server_tables)?;
+    let enc_csv_result = enc_sql_result.decrypt_csv(client_key).unwrap_or_default();
+
+    print_duration(start_time);
+    println!("Clear DB query result:\n{}", clear_csv_result);
+    println!("Encrypted DB query result:\n{}", enc_csv_result);
+    if enc_csv_result == clear_csv_result {
+        println!("Results match: YES");
+    } else {
+        println!("Results match: NO");
+    }
     Ok(())
 }
 
@@ -182,7 +193,7 @@ fn run<P: AsRef<Path>>(sql: &str, csv_dir: P, run_mode: RunMode) -> Result<(), F
     let server_tables = OrderedTables::load_from_directory(&csv_dir)?;
 
     match run_mode {
-        RunMode::Trivial | RunMode::Encrypted => {
+        RunMode::Trivial | RunMode::Encrypted | RunMode::Compare => {
             // Generate a new key
             let config = ConfigBuilder::default().build();
             let ck = ClientKey::generate(config);
@@ -194,8 +205,10 @@ fn run<P: AsRef<Path>>(sql: &str, csv_dir: P, run_mode: RunMode) -> Result<(), F
 
             if matches!(run_mode, RunMode::Trivial) {
                 run_trivial(sql, &sql_client, &server_tables, start_time)
-            } else {
+            } else if matches!(run_mode, RunMode::Encrypted) {
                 run_enc(sql, &sql_client, &server_tables, start_time, &ck)
+            } else {
+                run_clear_enc(sql, &sql_client, &server_tables, start_time, &ck)
             }
         }
         RunMode::Clear => {
