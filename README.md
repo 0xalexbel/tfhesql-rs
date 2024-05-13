@@ -91,6 +91,27 @@ fn main() {
 }
 ```
 
+## The Problem & The Approach
+1. Define a SQL query format
+2. Write an SQL SELECT interpretor
+3. Define a SQL result 
+
+While progressing in solving the bounty, it became very clear that the final solution would be impracticable on real-life SQL databases. It's likely impracticable on very small SQL databases as well (kind of depressing 😩).
+
+Thus, significant efforts were directed towards optimizing performance to enable the execution of a SQL SELECT request on a very small database. Emphasis was placed on refining both the SQL query and result formats.
+
+The SQL interpreter was deliberately tested less for the following reasons:
+- The extensive testing required.
+- Users can optimize their queries, potentially nullifying the benefits of interpreter optimization.
+- Although the bounty focused on the SQL interpreter, the underlying issue primarily lay in server-side computation strategies rather than the interpreter itself.
+
+## The SQL result
+
+One reason why the overhaul solution will always be somewhat impracticable is that a final U8 masking operation will always be performed on every single data value in every table of the database.
+
+```
+Total Number of U8 AND operations = Sum(0 <= t < n_tables; NumOfRows(t)*NumColumns(t))
+```
 ## SQL SELECT type comparison specs
 
 The lib supports the MySQL SELECT type comparison specs.
@@ -102,9 +123,9 @@ The lib supports the MySQL SELECT type comparison specs.
 
 Note: MSSQL type comparison specs are much more advanced.
 
-## Ast SQL Tree
+## SQL AST Tree
 
-1. Simplification: the Ast Tree is simplified to get rid of the parenthesis, +/- signs and 'Not' unary operators.
+1. Simplification: the AST Tree is simplified to get rid of the parenthesis, +/- signs and 'Not' unary operators.
 2. Optimisation: the tree is parsed to eliminate trivial binary operations (for example: Some U8 > -1 is always true)
 3. Conversion to Binary Tree: the tree is expanded to form a perfect binary tree with the following properties:
 - Full binary tree
