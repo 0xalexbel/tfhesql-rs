@@ -21,30 +21,42 @@ A pure Rust library for executing simple FHE-encrypted SQL queries on a clear da
 struct EncryptedSqlQuery<B> {
     /// A header containing the crypted projections and table
     header: TableBoolMaskHeader<B>,
-    /// A boolean: True if SELECT DISTINCT 
+    /// A crypted boolean: True if running a SELECT DISTINCT query
     is_distinct: B,
     /// A structure defining the WHERE clause
     where_tree: SqlQueryTree<B>,
 }
 
 pub struct TableBoolMaskHeader<B> {
-    /// A boolean mask
+    /// A crypted boolean mask
     /// Len = the number of tables
     pub table_mask: BoolMask<B>,
-    /// A boolean mask 
+    /// A crypted boolean mask 
     /// Len = Maximum number of columns in a single table
     pub field_mask: BoolMask<B>,
-    /// A boolean mask = NOT(field_mask)
+    /// A crypted boolean mask = NOT(field_mask)
     pub not_field_mask: BoolMask<B>,
 }
 
 pub struct SqlQueryTree<B> {
-    /// A binary tree where all the nodes is either a AND or a OR
+    /// A binary tree of OptionalBool<B> nodes.
+    /// Each node can be one of the following
+    /// - a AND operator
+    /// - a OR operator 
+    /// - None
     tree: OptionalBoolTree<B>,
     /// A vector of boolean pairs.
     /// One boolean pair for each leaf of the Ast Binary Tree
     pub(super) dummy_mask: Vec<EqNe<B>>,
     pub(super) compare_ops: SqlQueryBinOpArray<B>,
 }
+
+pub struct OptionalBool<B> {
+    /// A crypted boolean
+    pub value: B,
+    /// A crypted boolean
+    pub none_some: Option<EqNe<B>>,
+}
+
 
 ```

@@ -126,24 +126,6 @@ impl<B> SqlQueryTree<B> {
         self.compare_ops.len()
     }
 
-    // /// Interval is  inclusive
-    // #[inline]
-    // pub fn op_interval(&self, op_index: usize) -> (usize, usize) {
-    //     assert!(self.num_ops() > op_index);
-    //     // D = dummies
-    //     // n = num ops
-    //     // N = n + D
-    //     // j > 0 & j < n; Op(j) = [j, Min(j+D, N-1)]
-    //     // Op(0) = {0}
-    //     if op_index == 0 {
-    //         (0, 0)
-    //     } else {
-    //         let d = self.num_dummy_ops();
-    //         let max_n = self.max_num_ops();
-    //         (op_index, (op_index + d).min(max_n - 1))
-    //     }
-    // }
-
     /// Interval is  inclusive
     #[inline]
     pub fn ops_at(&self, tree_index: usize) -> (usize, usize) {
