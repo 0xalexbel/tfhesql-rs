@@ -17,7 +17,7 @@ fn main() {
     // 2. Creates a new FheSqlClient instance
     let sql_client = FheSqlClient::new(client_ordered_schemas.clone()).unwrap();
 
-    // 3. Generates a new SQL query with a SQL SELECT statement and the default options (compress = true, format = by rows + padding).
+    // 3. Generates a new SQL query with a SQL SELECT statement
     let sql = "SELECT CustomerID,PostalCode,Country FROM Customers WHERE Country IN ('France', 'Germany')";
     let enc_sql_query = sql_client.encrypt_sql(sql, &ck, SqlResultOptions::best()).unwrap();
 
