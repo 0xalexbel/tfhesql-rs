@@ -190,7 +190,7 @@ where
                     // buffer_index range is [0, max_op_index - min_op_index]
                     let op_index = buffer_index + min_op_index;
                     let f = sql_query_tree.op_flag_at(tree_index, op_index);
-                    let s = self.get_select_at(min_op_index, row_index);
+                    let s = self.get_select_at(op_index, row_index);
                     *dst = f.refref_bitand(s);
                 });
             par_bitor_vec(buffer).unwrap()
@@ -227,7 +227,7 @@ where
                     // buffer_index range is [0, max_op_index - min_op_index]
                     let op_index = buffer_index + min_op_index;
                     let f = sql_query_tree.op_flag_at(tree_index, op_index);
-                    let s = self.get_select_at(min_op_index, row_index);
+                    let s = self.get_select_at(op_index, row_index);
                     *dst = f.refref_bitand(s);
                 });
             par_bitor_vec(buffer).unwrap()

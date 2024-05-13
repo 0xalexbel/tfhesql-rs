@@ -103,6 +103,13 @@ pub fn table_numbers() -> Table {
     table
 }
 
+pub fn table_tiny_numbers() -> Table {
+    let csv_file = tfhesql_test_db_file("tiny-numbers", "Numbers.csv");
+    let table = Table::load(&csv_file).unwrap();
+    assert_eq!(table.name(), "Numbers");
+    table
+}
+
 pub fn simple_sql_client(table: &str, input: RecordBatch) -> FheSqlClient {
     let table = Table::new(table, input);
     let tables: OrderedTables = OrderedTables::new(vec![table]).unwrap();
@@ -152,6 +159,16 @@ pub fn sql_client_customers_categories() -> (FheSqlClient, OrderedTables) {
 
 pub fn sql_client_numbers() -> (FheSqlClient, OrderedTables) {
     let table = table_numbers();
+    let tables: OrderedTables = OrderedTables::new(vec![table]).unwrap();
+    let client_server_ordered_schemas = tables.ordered_schemas();
+    (
+        FheSqlClient::new(client_server_ordered_schemas.clone()).unwrap(),
+        tables,
+    )
+}
+
+pub fn sql_client_tiny_numbers() -> (FheSqlClient, OrderedTables) {
+    let table = table_tiny_numbers();
     let tables: OrderedTables = OrderedTables::new(vec![table]).unwrap();
     let client_server_ordered_schemas = tables.ordered_schemas();
     (

@@ -1,9 +1,9 @@
-use super::{simple_batch::RecordBatchBuilder, sql_client_customers, sql_client_numbers};
+use super::{simple_batch::RecordBatchBuilder, sql_client_customers, sql_client_numbers, sql_client_tiny_numbers};
 use crate::{
     test::sql_client_customers_categories, FheRunSqlQuery, FheSqlServer, SqlResultFormat,
     SqlResultOptions,
 };
-use arrow_array::types::UInt32Type;
+use arrow_array::types::{Int16Type, UInt32Type};
 use arrow_cast::pretty::print_batches;
 
 #[test]
@@ -186,6 +186,33 @@ fn test_numbers_2() {
     // let expected_rb = expected_rb.finish();
     // assert_eq!(rb.schema(), expected_rb.schema());
     // assert_eq!(rb.columns(), expected_rb.columns());
+
+    print_batches(&[rb]).unwrap();
+
+    #[cfg(feature = "stats")]
+    clear_sql_result.print_stats();
+}
+
+#[test]
+fn test_numbers_3() {
+    let (sql_client, tables) = sql_client_tiny_numbers();
+
+    let options = SqlResultOptions::default()
+        .with_compress(true)
+        .with_format(SqlResultFormat::TableBytesInColumnOrder);
+
+    let sql = "SELECT SomeBool,SomeI16 FROM Numbers WHERE (SomeI16 > 2 AND SomeBool) OR SomeI16 < 0";
+    let clear_sql_query = sql_client.clear_sql(sql, options).unwrap();
+    let clear_sql_result = FheSqlServer::run(&clear_sql_query, &tables).unwrap();
+    let rb = clear_sql_result.clone().into_record_batch().unwrap();
+
+    let mut expected_rb = RecordBatchBuilder::new();
+    expected_rb.push_bool_with_name("SomeBool", vec![true,true,false]);
+    expected_rb.push_with_name::<Int16Type>("SomeI16", vec![-16355,27024,-4666]);
+
+    let expected_rb = expected_rb.finish();
+    assert_eq!(rb.schema(), expected_rb.schema());
+    assert_eq!(rb.columns(), expected_rb.columns());
 
     print_batches(&[rb]).unwrap();
 

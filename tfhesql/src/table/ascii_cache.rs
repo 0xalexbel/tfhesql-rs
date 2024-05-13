@@ -96,8 +96,6 @@ where
         chunck_size: usize,
         num_cache: Option<&U64EqGtTree<B>>,
     ) {
-        use crate::bitops::par_bitand_10;
-
         self.charx8
             .iter_mut()
             .enumerate()
