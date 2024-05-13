@@ -105,7 +105,7 @@ The SQL interpreter was deliberately tested less for the following reasons:
 - Users can optimize their queries, potentially nullifying the benefits of interpreter optimization.
 - Although the bounty focused on the SQL interpreter, the underlying issue primarily lay in server-side computation strategies rather than the interpreter itself.
 
-## The SQL result
+## Cost of the result
 
 One reason why the overhaul solution will always be somewhat impracticable is that a final U8 masking operation will always be performed on every single data value in every table of the database.
 
@@ -228,4 +228,76 @@ pub struct SqlQueryRightBytes256<B> {
 
 ## Encrypted Result
 
+The lib API offers 3 SQL result formats. For each format type a specific bunch of Bytes are computed. The bytes are later masked with the given table mask to produce the final encrypted result.
 
+```rust
+pub struct SqlResultOptions {
+    compress: bool,
+    format: SqlResultFormat,
+}
+
+pub enum SqlResultFormat {
+    RowBytes(bool),
+    TableBytesInRowOrder,
+    TableBytesInColumnOrder,
+}
+```
+
+- ``compress`` : If set to true (default), the bytes are compressed prior to table masking. 
+- ``SqlResultFormat::RowBytes(padding)`` : The result is a two-dimensional array of bytes, where each entry corresponds to a row. For each row, an array of bytes is computed. A boolean padding option is available to obfuscate the result.
+- ``SqlResultFormat::TableBytesInRowOrder`` : The result is a one-dimensional array of bytes, with all the rows concatenated to form a single byte array.
+- ``SqlResultFormat::TableBytesInColumnOrder`` : The result is a one-dimensional array of bytes, with all the columns concatenated to form a single byte array.
+
+### The Rust encrypted structure
+
+The following structure describes how the SQL result is computed. It consists of an encrypted part and a clear part. 
+- The clear part contains only parameters necessary for client-side decryption of the result. It deliberately includes redundant information to facilitate self-decryption using a provided client key.
+- The encrypted part contains the actual encrypted SQL result.
+
+```rust
+pub(crate) struct SqlResult<U8, B> {
+    /// Encrypted part
+    
+    /// A boolean mask (redundant) that encodes the unique selected table
+    table_mask: BoolMask<B>,
+    /// A boolean mask (redundant) that encodes the multiple selected columns
+    field_mask: BoolMask<B>,
+    /// A boolean mask that encodes the selected rows computed from the SQL SELECT operation
+    select_mask: BoolMask<B>,
+    /// A two-dimentional array of encrypted bytes which encodes the table data values
+    /// How this byte array is computed is explained below
+    byte_arrays: Vec<ByteArray<U8>>,
+
+    /// Clear part. Redundant, allows self-decryption.
+    pub(crate) options: SqlResultOptions,
+    pub(crate) ordered_schemas: OrderedSchemas,
+
+    #[cfg(feature = "stats")]
+    #[serde(skip_serializing, skip_deserializing)]
+    pub(crate) stats: SqlStats,
+}
+```
+
+### How the final bytes are computed ?
+
+```
+Table (4 columns table):
+Row1 = [a, b, c, d]
+Row2 = [e, f, g, h]
+
+Compressed Table (1 column table):
+Row1: [compress_byte_array(a, b, c, d)]
+Row2: [compress_byte_array(e, f, g, h)]
+
+Compressed Table:
+compress_byte_array(a, b, c, d, e, f, g, h)
+
+Compressed Table:
+compress_byte_array(a, e, b, f, c, g, d, h)
+```
+
+## Where to go from here ?
+
+- Returning the encrypted table looks interesting on paper, but makes the whole exercise impracticable. Furthermore, as pointed out in the comments, it does not bring any advantage privacy-wise since the table is clear for both the client and the server. This step really hurts.
+
+- Performing SQL requests using row bounds may be feasable. The client would send a SQL SELECT request with predefined row bounds, thus limiting the CPU cost. The maximum row bounds could be controlled by the server.
