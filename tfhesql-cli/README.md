@@ -16,10 +16,11 @@ will generate a table named ``my-table``. The cli does not check the name validi
 ```bash
 SELECT CustomerID,PostalCode,Country FROM Customers WHERE Country='Germany'
 ```
-- ``--mode`` : Optional. Default value is ``encrypted``
+- ``--mode`` : Optional. Default value is ``compare``
     - ``encrypted``: the query is executed using FHE encrypted data (very slow)
     - ``trivial``: the query is executed using trivialy encrypted data (fast)
     - ``clear``: the query is executed using rust native types (bool and u8) (usefull for quick testing)
+    - ``compare``: the query is executed using rust native types (bool and u8) and also using FHE encrypted data, outputs the two results and performs the comparison
 
 ## Output
 
