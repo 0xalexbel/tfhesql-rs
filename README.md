@@ -105,13 +105,6 @@ The SQL interpreter was deliberately tested less for the following reasons:
 - Users can optimize their queries, potentially nullifying the benefits of interpreter optimization.
 - Although the bounty focused on the SQL interpreter, the underlying issue primarily lay in server-side computation strategies rather than the interpreter itself.
 
-## Cost of the result
-
-One reason why the overhaul solution will always be somewhat impracticable is that a final U8 masking operation will always be performed on every single data value in every table of the database.
-
-```
-Total Number of U8 AND operations = Sum(0 <= t < n_tables; NumOfRows(t)*NumColumns(t))
-```
 ## SQL SELECT type comparison specs
 
 The lib supports the MySQL SELECT type comparison specs.
@@ -330,8 +323,18 @@ SELECT CustomerID,PostalCode,Country FROM Customers WHERE Country IN ('France', 
 | `compress=true`, `TableBytesInRowOrder`     | 18357   | 243      | 17533    | 5171      | 1029     | 0         | 0  | 58575  | 49 %    |
 | `compress=true`, `TableBytesInColumnOrder`  | 18357   | 238      | 17533    | 5056      | 1029     | 0         | 0  | 58095  | 49 %    |
 
+## Cost of result
+
+One reason why the overhaul solution appears to always be somewhat impracticable is that a final U8 masking operation will always be performed on every single data value in every table of the database.
+
+```
+Total Number of U8 AND operations = Sum(0 <= t < n_tables; NumOfRows(t)*NumColumns(t))
+```
+
 ## Where to go from here ?
 
 - Returning the encrypted table looks interesting on paper, but makes the whole exercise impracticable. Furthermore, as pointed out in the comments, it does not bring any advantage privacy-wise since the table is clear for both the client and the server. This step really hurts.
 
 - Performing SQL requests using row bounds may be feasable. The client would send a SQL SELECT request with predefined row bounds, thus limiting the CPU cost. The maximum row bounds could be controlled by the server.
+
+- One area of investigation could be an encrypted protocol between the client and the server allowing the client to query specific row bounds in the db. Once the row bounds are decrypted on the client side, a concrete 'feasable' encrypted SQL query is sent by the client to the server.
