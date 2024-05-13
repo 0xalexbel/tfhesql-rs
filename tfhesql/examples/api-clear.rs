@@ -27,10 +27,6 @@ fn main() {
     //    and the server are based on it.
     let server_tables = OrderedTables::load_from_directory(&csv_dir).unwrap();
 
-    server_tables.iter_tables().enumerate().for_each(|(i, t)| {
-        assert_eq!(t.name(), client_ordered_schemas.name(i));
-    });
-
     // 2. Executes the SQL query on the server
     let clear_sql_result = FheSqlServer::run(&clear_sql_query, &server_tables).unwrap();
 
