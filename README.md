@@ -91,6 +91,17 @@ fn main() {
 }
 ```
 
+## SQL SELECT type comparison specs
+
+The lib supports the MySQL SELECT type comparison specs.
+- left > right <=> CastToNumber(left) > CastToNumber(right)
+- -left <=> -(CastToNumber(left))
+- +left <=> +(CastToNumber(left))
+- CastToNumber(some_ascii) <=> parse the ascii string and convert it to a number. 0 if failed.  
+- CastToNumber(some_bool) = 0 if some_bool is false, 1 if some_bool is true
+
+Note: MSSQL type comparison specs are much more advanced.
+
 ## Ast SQL Tree
 
 1. Simplification: the Ast Tree is simplified to get rid of the parenthesis, +/- signs and 'Not' unary operators.
@@ -99,11 +110,9 @@ fn main() {
 - Full binary tree
 - Each node represents either a AND or a OR binary operation
 - Each leaf is a Numerical or ASCII comparison with the following properties
-```
-- Left Operand: a vector of 32 Bytes
-- Right Operand: a vector of 32 Bytes
-- Operator: Boolean Mask of len 6
-```
+    - **Left Operand**: is an column identifier (encoded as a boolean mask)
+    - **Right Operand**: is a value (numerical or ASCII) or a column identifier
+    - **Operator**: can only either  =, >, <, >=, <= or != (6 possibilities)
 
 ## Encrypted SQL Request format
 
@@ -195,3 +204,7 @@ pub struct SqlQueryRightBytes256<B> {
 }
 
 ```
+
+## Encrypted Result
+
+
