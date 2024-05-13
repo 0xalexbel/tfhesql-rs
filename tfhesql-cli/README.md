@@ -17,20 +17,10 @@ will generate a table named ``my-table``. The cli does not check the name validi
 SELECT CustomerID,PostalCode,Country FROM Customers WHERE Country='Germany'
 ```
 - ``--mode`` : Optional. Default value is ``check-encrypt``
-    - ``check-encrypt``: the query is executed using rust native types (bool and u8) and also using FHE encrypted data, outputs the two results and performs the comparison
-    - ``encrypt``: the query is executed using FHE encrypted data (very slow)
-    - ``trivial``: the query is executed using trivialy encrypted data (fast)
-    - ``clear``: the query is executed using rust native types (bool and u8) (usefull for quick testing)
-
-## Output
-
-The output 'tries' to strictly follow the instructions given in the bounty. The bounty instructions were very vague. I did my best to understand the requirements...
-
-- First group: ``Runtime: <duration in seconds>``
-- Second group: ``Clear DB query result:`` followed by a multiline result in csv format
-- Third group: ``Encrypted DB query result:`` followed by the encrypted result in JSON string format
-
-Note: ``Results match: YES`` is ignored by lack of documentation.
+    - ``check-encrypt``: the query is executed using rust native types (bool and u8) and also using FHE encrypted data, outputs the two results in csv format and performs the comparison
+    - ``encrypt``: the query is executed using FHE encrypted data (very slow), outputs the result in csv format
+    - ``trivial``: the query is executed using trivialy encrypted data (fast), outputs the result in csv format
+    - ``clear``: the query is executed using rust native types (bool and u8) (usefull for quick testing), outputs the result in csv format
 
 ## Example
 
@@ -41,7 +31,7 @@ $ cd /path/to/tfhesql-cli
 
 Type one of the following commands:
 
-- ``encrypted`` mode (default, slow)
+- ``check-encrypt`` mode (default, slow)
 ```bash
 cargo run --release -- --input-db ../tfhesql/test/data/tiny --query-file ../tfhesql/test/queries/query-eq.txt 
 ```
