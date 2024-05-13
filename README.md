@@ -296,6 +296,17 @@ Compressed Table:
 compress_byte_array(a, e, b, f, c, g, d, h)
 ```
 
+### Performance gains
+
+| Format                                     | Bool OR | UInt8 OR | Bool AND | UInt8 AND | Bool NOT | UInt8 NOT | IF | Total  | Gain	|
+|--------------------------------------------|---------|----------|----------|-----------|----------|-----------|----|--------|---------|
+| Compression=false, ByRow with padding      | 18357   | 552      | 17533    | 18661     | 1029     | 0         | 0  | 113771 | 0 %     |
+| Compression=false, TableBytesInRowOrder    | 18357   | 569      | 17533    | 18430     | 1029     | 0         | 0  | 112915 | 1 %     |
+| Compression=false, TableBytesInColumnOrder | 18357   | 564      | 17533    | 18424     | 1029     | 0         | 0  | 112871 | 1 %     |
+| Compression=true, ByRow with padding       | 18357   | 455      | 17533    | 11102     | 1029     | 0         | 0  | 83147  | 27 %    |
+| Compression=true, TableBytesInRowOrder     | 18357   | 243      | 17533    | 5171      | 1029     | 0         | 0  | 58575  | 49 %    |
+| Compression=true, TableBytesInColumnOrder  | 18357   | 238      | 17533    | 5056      | 1029     | 0         | 0  | 58095  | 49 %    |
+
 ## Where to go from here ?
 
 - Returning the encrypted table looks interesting on paper, but makes the whole exercise impracticable. Furthermore, as pointed out in the comments, it does not bring any advantage privacy-wise since the table is clear for both the client and the server. This step really hurts.
