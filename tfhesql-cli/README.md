@@ -42,11 +42,11 @@ Type one of the following commands:
 
 - ``encrypted`` mode (default, slow)
 ```bash
-$ cargo run --release -- --input-db ../tfhesql/test/data/tiny --query-file ../tfhesql/test/queries/query-eq.txt 
+cargo run --release -- --input-db ../tfhesql/test/data/tiny --query-file ../tfhesql/test/queries/query-eq.txt 
 ```
 
 - ``clear`` mode (fast)
 ```bash
-$ cargo run --release -- --input-db ../tfhesql/test/data/tiny --query-file ../tfhesql/test/queries/query-eq.txt --mode clear 
+cargo run --release -- --input-db ../tfhesql/test/data/tiny --query-file ../tfhesql/test/queries/query-eq.txt --mode clear 
 ```
 
