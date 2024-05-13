@@ -39,24 +39,69 @@ pub struct TableBoolMaskHeader<B> {
 }
 
 pub struct SqlQueryTree<B> {
-    /// A binary tree of OptionalBool<B> nodes.
+    /// A binary tree of BoolBinOpMask<B> nodes.
     /// Each node can be one of the following
     /// - a AND operator
     /// - a OR operator 
     /// - None
     tree: OptionalBoolTree<B>,
-    /// A vector of boolean pairs.
-    /// One boolean pair for each leaf of the Ast Binary Tree
+    /// A vector of boolean pairs (len = 2^k).
+    /// One boolean pair for each leaf of `tree`.
+    /// - True: the leaf is dummy
+    /// - False: the leaf is a valid Binary Operation.
     pub(super) dummy_mask: Vec<EqNe<B>>,
     pub(super) compare_ops: SqlQueryBinOpArray<B>,
 }
 
-pub struct OptionalBool<B> {
-    /// A crypted boolean
-    pub value: B,
-    /// A crypted boolean
-    pub none_some: Option<EqNe<B>>,
+pub struct OptionalBoolTree<B> {
+    // tree.len = 2^levels - 1
+    tree: Vec<BoolBinOpMask<B>>,
 }
 
+pub struct BoolBinOpMask<B> {
+    /// True is op is a binary AND operator
+    pub is_and: B,
+    /// True is op is a binary OR operator
+    pub is_or: B,
+}
+
+pub struct SqlQueryBinOpArray<B> {
+    pub(super) array: Vec<SqlQueryBinaryOp<B>>,
+}
+
+pub struct SqlQueryBinaryOp<B> {
+    /// Leaf position is the binary tree
+    /// The len is equal to 2^n = total number of leaves 
+    pub position_mask: BoolMask<B>,
+    /// Bool mask which encodes the operator: =, >, <, <=, >=, <>
+    /// Len = 6
+    pub comparator_mask: ComparatorMask<B>,
+    /// The left operand column name encoded as a boolean mask 
+    /// The mask len = the number of columns. The mask is full of zeros 
+    /// except one 1 at the column index corresponding to the left operand column 
+    /// identifier. 
+    pub left_ident_mask: BoolMask<B>,
+    /// The right operand (can be a value or an identifier)
+    pub right: SqlQueryRightOperand<B>,
+}
+
+pub struct SqlQueryRightOperand<B> {
+    /// The column mask (if not a numerical or ASCII value)
+    pub ident_mask: BoolMask<B>,
+    /// Right operand data encoded in structure of 4x64Bits words map
+    pub bytes_256: SqlQueryRightBytes256<B>,
+    /// True is the right operand is a numerical value strictly negative
+    pub is_strictly_negative: EqNe<B>,
+    /// True is the right operand is a value (numerical or ASCII)
+    pub is_value: B,
+}
+
+/// A 4x64Bits map
+pub struct SqlQueryRightBytes256<B> {
+    pub word_0_eq_gt: Bytes64EqGt<B>,
+    pub word_1_eq_ne: Bytes64EqNe<B>,
+    pub word_2_eq_ne: Bytes64EqNe<B>,
+    pub word_3_eq_ne: Bytes64EqNe<B>,
+}
 
 ```
