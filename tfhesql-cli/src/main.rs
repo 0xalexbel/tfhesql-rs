@@ -14,9 +14,9 @@ use tfhesql::*;
 pub enum RunMode {
     Clear,
     Trivial,
-    Encrypted,
+    Encrypt,
     #[default]
-    Compare,
+    CheckEncrypt,
 }
 
 impl FromStr for RunMode {
@@ -26,8 +26,8 @@ impl FromStr for RunMode {
         match input.to_ascii_lowercase().as_str() {
             "clear" => Ok(RunMode::Clear),
             "trivial" => Ok(RunMode::Trivial),
-            "encrypted" => Ok(RunMode::Encrypted),
-            "compare" => Ok(RunMode::Compare),
+            "encrypt" => Ok(RunMode::Encrypt),
+            "check-encrypt" => Ok(RunMode::CheckEncrypt),
             _ => Err(()),
         }
     }
@@ -151,7 +151,9 @@ fn run_enc(
     Ok(())
 }
 
-fn run_clear_enc(
+////////////////////////////////////////////////////////////////////////////////
+
+fn run_check_enc(
     sql: &str,
     sql_client: &FheSqlClient,
     server_tables: &OrderedTables,
@@ -193,7 +195,7 @@ fn run<P: AsRef<Path>>(sql: &str, csv_dir: P, run_mode: RunMode) -> Result<(), F
     let server_tables = OrderedTables::load_from_directory(&csv_dir)?;
 
     match run_mode {
-        RunMode::Trivial | RunMode::Encrypted | RunMode::Compare => {
+        RunMode::Trivial | RunMode::Encrypt | RunMode::CheckEncrypt => {
             // Generate a new key
             let config = ConfigBuilder::default().build();
             let ck = ClientKey::generate(config);
@@ -205,10 +207,10 @@ fn run<P: AsRef<Path>>(sql: &str, csv_dir: P, run_mode: RunMode) -> Result<(), F
 
             if matches!(run_mode, RunMode::Trivial) {
                 run_trivial(sql, &sql_client, &server_tables, start_time)
-            } else if matches!(run_mode, RunMode::Encrypted) {
+            } else if matches!(run_mode, RunMode::Encrypt) {
                 run_enc(sql, &sql_client, &server_tables, start_time, &ck)
             } else {
-                run_clear_enc(sql, &sql_client, &server_tables, start_time, &ck)
+                run_check_enc(sql, &sql_client, &server_tables, start_time, &ck)
             }
         }
         RunMode::Clear => {
