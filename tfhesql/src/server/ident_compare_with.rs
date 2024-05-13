@@ -8,6 +8,8 @@ use crate::uint::mask::BoolMask;
 use crate::bitops::*;
 use crate::types::*;
 use crate::OrderedTables;
+
+#[cfg(feature = "parallel")]
 use rayon::iter::*;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,6 +56,7 @@ impl<B> IdentCompareWithArray<B>
 where
     B: ThreadSafeBool,
 {
+    #[cfg(feature = "parallel")]
     // Always parallel (for now)
     pub fn tree_compute_select_in_place(
         &self,
@@ -65,12 +68,30 @@ where
             .par_iter_mut()
             .enumerate()
             .for_each(|(row_index, dst)| {
-                let tree_arg = self.par_compute_select_row_arg(query_ref, row_index);
+                let tree_arg = self.compute_select_row_arg(query_ref, row_index);
                 *dst = query_ref.where_tree().tree_compute(tree_arg);
             });
     }
 
-    fn par_compute_select_row_arg(
+    #[cfg(not(feature = "parallel"))]
+    // Always parallel (for now)
+    pub fn tree_compute_select_in_place(
+        &self,
+        query_ref: &SqlQueryRef<B>,
+        select_mask: &mut BoolMask<B>,
+    ) {
+        select_mask
+            .mask
+            .iter_mut()
+            .enumerate()
+            .for_each(|(row_index, dst)| {
+                let tree_arg = self.compute_select_row_arg(query_ref, row_index);
+                *dst = query_ref.where_tree().tree_compute(tree_arg);
+            });
+    }
+
+    #[cfg(feature = "parallel")]
+    fn compute_select_row_arg(
         &self,
         query_ref: &SqlQueryRef<B>,
         row_index: usize,
@@ -101,12 +122,45 @@ where
         }
     }
 
+    #[cfg(not(feature = "parallel"))]
+    fn compute_select_row_arg(
+        &self,
+        query_ref: &SqlQueryRef<B>,
+        row_index: usize,
+    ) -> Vec<OptionalBool<B>> {
+        let sql_query_tree = query_ref.where_tree();
+        if sql_query_tree.num_dummy_ops() == 0 {
+            // Serial, no mask computation needed (could be parallel)
+            sql_query_tree
+                .dummy_mask()
+                .iter()
+                .enumerate()
+                .map(|(tree_index, _)| {
+                    // when no dummies, tree_index == op_index
+                    OptionalBool::<B>::from_value(self.get_select_at(tree_index, row_index).clone())
+                })
+                .collect::<Vec<OptionalBool<B>>>()
+        } else {
+            // Parallel
+            sql_query_tree
+                .dummy_mask()
+                .iter()
+                .enumerate()
+                .map(|(tree_index, dummy_not_dummy)| {
+                    let value = self.par_compute_select_at(tree_index, sql_query_tree, row_index);
+                    OptionalBool::<B>::from_optional_value(value, dummy_not_dummy.clone())
+                })
+                .collect::<Vec<OptionalBool<B>>>()
+        }
+    }
+
     #[inline]
     fn get_select_at(&self, op_index: usize, row_index: usize) -> &B {
         self.array[op_index].select_mask().get(row_index)
     }
 
     // Always parallel (for now)
+    #[cfg(feature = "parallel")]
     fn par_compute_select_at(
         &self,
         tree_index: usize,
@@ -131,6 +185,43 @@ where
             // OR {all OpFlag AND OpSelect(row) }
             buffer
                 .par_iter_mut()
+                .enumerate()
+                .for_each(|(buffer_index, dst)| {
+                    // buffer_index range is [0, max_op_index - min_op_index]
+                    let op_index = buffer_index + min_op_index;
+                    let f = sql_query_tree.op_flag_at(tree_index, op_index);
+                    let s = self.get_select_at(min_op_index, row_index);
+                    *dst = f.refref_bitand(s);
+                });
+            par_bitor_vec(buffer).unwrap()
+        }
+    }
+
+    #[cfg(not(feature = "parallel"))]
+    fn par_compute_select_at(
+        &self,
+        tree_index: usize,
+        sql_query_tree: &SqlQueryTree<B>,
+        row_index: usize,
+    ) -> B {
+        // inclusive: op_index is in [min_op_index, max_op_index] interval
+        let (min_op_index, max_op_index) = sql_query_tree.ops_at(tree_index);
+        assert!(min_op_index <= max_op_index);
+
+        if min_op_index == max_op_index {
+            if min_op_index == 0 {
+                assert_eq!(tree_index, 0);
+                self.get_select_at(0, row_index).clone()
+            } else {
+                // if there is only one single position, it cannot be dummy!
+                self.get_select_at(min_op_index, row_index).clone()
+            }
+        } else {
+            let mut buffer = vec![B::get_false(); max_op_index - min_op_index + 1];
+            assert!(buffer.len() > 1);
+            // OR {all OpFlag AND OpSelect(row) }
+            buffer
+                .iter_mut()
                 .enumerate()
                 .for_each(|(buffer_index, dst)| {
                     // buffer_index range is [0, max_op_index - min_op_index]

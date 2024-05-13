@@ -160,3 +160,35 @@ fn test_numbers_1() {
     #[cfg(feature = "stats")]
     clear_sql_result.print_stats();
 }
+
+#[test]
+fn test_numbers_2() {
+    let (sql_client, tables) = sql_client_numbers();
+
+    let options = SqlResultOptions::default()
+        .with_compress(true)
+        .with_format(SqlResultFormat::TableBytesInColumnOrder);
+
+    let sql = "SELECT * FROM Numbers WHERE (SomeU8 > 2 AND SomeBool) OR SomeI16 < 0";
+    let clear_sql_query = sql_client.clear_sql(sql, options).unwrap();
+    let clear_sql_result = FheSqlServer::run(&clear_sql_query, &tables).unwrap();
+    let rb = clear_sql_result.clone().into_record_batch().unwrap();
+
+    // let mut expected_rb = RecordBatchBuilder::new();
+    // expected_rb.push_with_name::<UInt32Type>("CustomerID", vec![1]);
+    // expected_rb.push_str_with_name("CustomerName", vec!["Alfreds Futterkiste"]);
+    // expected_rb.push_str_with_name("ContactName", vec!["Maria Anders"]);
+    // expected_rb.push_str_with_name("Address", vec!["Obere Str. 57"]);
+    // expected_rb.push_str_with_name("City", vec!["Berlin"]);
+    // expected_rb.push_str_with_name("PostalCode", vec!["12209"]);
+    // expected_rb.push_str_with_name("Country", vec!["Germany"]);
+
+    // let expected_rb = expected_rb.finish();
+    // assert_eq!(rb.schema(), expected_rb.schema());
+    // assert_eq!(rb.columns(), expected_rb.columns());
+
+    print_batches(&[rb]).unwrap();
+
+    #[cfg(feature = "stats")]
+    clear_sql_result.print_stats();
+}

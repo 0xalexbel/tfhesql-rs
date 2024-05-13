@@ -154,7 +154,7 @@ impl<B> SqlQueryTree<B> {
     #[inline]
     pub fn op_flag_at(&self, tree_index: usize, op_index: usize) -> &B {
         assert!(tree_index >= op_index);
-        assert!(tree_index - op_index < self.num_dummy_ops());
+        assert!(tree_index - op_index < self.compare_ops.len());
         assert!(self.num_ops() > op_index);
         assert!(self.max_num_ops() > tree_index);
         if tree_index == 0 || op_index == 0 {

@@ -3,8 +3,9 @@ use std::collections::HashMap;
 #[cfg(feature = "parallel")]
 use rayon::iter::*;
 
-use crate::hi_lo_tree::{Bytes64Equ, U64EqGtTree, U64EquTree};
 use crate::bitops::par_bitand_vec_ref;
+use crate::hi_lo_tree::{Bytes64Equ, U64EqGtTree, U64EquTree};
+use crate::types::ThreadSafeBool;
 use crate::OrderedTables;
 use crate::{
     ascii::ascii_to_le_u64x4,
@@ -12,7 +13,6 @@ use crate::{
     query::sql_query_value::SqlQueryRightBytes256,
     uint::{block::U64x4, iter::*},
 };
-use crate::types::ThreadSafeBool;
 
 ////////////////////////////////////////////////////////////////////////////////
 // AsciiCache
@@ -96,10 +96,7 @@ where
         chunck_size: usize,
         num_cache: Option<&U64EqGtTree<B>>,
     ) {
-        use crate::{
-            uint::traits::ToU32,
-            bitops::{par_bitand_10, par_bitand_vec_ref},
-        };
+        use crate::bitops::par_bitand_10;
 
         self.charx8
             .iter_mut()
@@ -166,7 +163,7 @@ where
             charx8[2].ascii_eq_to_u64(u64x4[2], &mut stack);
             charx8[3].ascii_eq_to_u64(u64x4[3], &mut stack);
         }
-        
+
         par_bitand_vec_ref(stack).unwrap()
     }
 }
@@ -185,10 +182,7 @@ impl<B> AsciiCache<B> {
 #[cfg(test)]
 mod test {
     use super::AsciiCache;
-    use crate::{
-        query::sql_query_value::ClearSqlQueryRightBytes256,
-        OrderedTables, Table,
-    };
+    use crate::{query::sql_query_value::ClearSqlQueryRightBytes256, OrderedTables, Table};
     use arrow_array::*;
     use arrow_schema::{DataType, Field, Schema};
     use std::sync::Arc;
