@@ -319,15 +319,16 @@ The following results where optained running the `clear-api.rs` example located 
 SELECT CustomerID,PostalCode,Country FROM Customers WHERE Country IN ('France', 'Germany')
 ```
 
+- The table below enumerates the total number of AND, OR and NOT operations. 
 
 | Format                                     | Bool OR | UInt8 OR | Bool AND | UInt8 AND | Bool NOT | UInt8 NOT | IF | Total  | Gain	|
 |--------------------------------------------|---------|----------|----------|-----------|----------|-----------|----|--------|---------|
-| Compression=false, ByRow with padding      | 18357   | 552      | 17533    | 18661     | 1029     | 0         | 0  | 113771 | 0 %     |
-| Compression=false, TableBytesInRowOrder    | 18357   | 569      | 17533    | 18430     | 1029     | 0         | 0  | 112915 | 1 %     |
-| Compression=false, TableBytesInColumnOrder | 18357   | 564      | 17533    | 18424     | 1029     | 0         | 0  | 112871 | 1 %     |
-| Compression=true, ByRow with padding       | 18357   | 455      | 17533    | 11102     | 1029     | 0         | 0  | 83147  | 27 %    |
-| Compression=true, TableBytesInRowOrder     | 18357   | 243      | 17533    | 5171      | 1029     | 0         | 0  | 58575  | 49 %    |
-| Compression=true, TableBytesInColumnOrder  | 18357   | 238      | 17533    | 5056      | 1029     | 0         | 0  | 58095  | 49 %    |
+| `compress=false`, `ByRow(true)`       | 18357   | 552      | 17533    | 18661     | 1029     | 0         | 0  | 113771 | 0 %     |
+| `compress=false`, `TableBytesInRowOrder`    | 18357   | 569      | 17533    | 18430     | 1029     | 0         | 0  | 112915 | 1 %     |
+| `compress=false`, `TableBytesInColumnOrder` | 18357   | 564      | 17533    | 18424     | 1029     | 0         | 0  | 112871 | 1 %     |
+| `compress=true`, `ByRow(true)`       | 18357   | 455      | 17533    | 11102     | 1029     | 0         | 0  | 83147  | 27 %    |
+| `compress=true`, `TableBytesInRowOrder`     | 18357   | 243      | 17533    | 5171      | 1029     | 0         | 0  | 58575  | 49 %    |
+| `compress=true`, `TableBytesInColumnOrder`  | 18357   | 238      | 17533    | 5056      | 1029     | 0         | 0  | 58095  | 49 %    |
 
 ## Where to go from here ?
 
