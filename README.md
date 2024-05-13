@@ -248,6 +248,30 @@ pub enum SqlResultFormat {
 - ``SqlResultFormat::TableBytesInRowOrder`` : The result is a one-dimensional array of bytes, with all the rows concatenated to form a single byte array.
 - ``SqlResultFormat::TableBytesInColumnOrder`` : The result is a one-dimensional array of bytes, with all the columns concatenated to form a single byte array.
 
+### Final bytes order as stored in the SQL encrypted result structure
+The following table has 4 columns and 2 rows:
+| Col1 | Col2 | Col3 | Col4 |
+|----|----|----|----|
+| a | b | c | d | 
+| e | f | g | h | 
+
+The bytes are arranged as follow.
+```rust
+// SqlResultFormat::RowBytes(padding)
+[
+    [compress_byte_array(a, b, c, d)]
+    [compress_byte_array(e, f, g, h)]
+]
+
+// SqlResultFormat::TableBytesInRowOrder
+[compress_byte_array(a, b, c, d, e, f, g ,h)]
+
+// SqlResultFormat::TableBytesInRowOrder
+[compress_byte_array(a, e, b, f, c, g, d ,h)]
+
+```
+
+
 ### The Rust encrypted structure
 
 The following structure describes how the SQL result is computed. It consists of an encrypted part and a clear part. 
@@ -278,25 +302,23 @@ pub(crate) struct SqlResult<U8, B> {
 }
 ```
 
-### How the final bytes are computed ?
+## Benchmarks
 
+The following results where optained running the `clear-api.rs` example located in the `tfhesql` lib examples directory. 
+
+- The database used consists of the 2 following csv files:
+
+| Table | Rows | Columns |
+|-------|------|---------|
+| Customers.csv | 91 | 1xUIn32 column and 6xASCII columns |
+| Categories.csv | 8 | 1xUIn32 column and 2xASCII columns |
+
+- The following SQL query is executed, it includes a IN clause thus doubling the numbers of '=' comparison operations.
+
+```sql
+SELECT CustomerID,PostalCode,Country FROM Customers WHERE Country IN ('France', 'Germany')
 ```
-Table (4 columns table):
-Row1 = [a, b, c, d]
-Row2 = [e, f, g, h]
 
-Compressed Table (1 column table):
-Row1: [compress_byte_array(a, b, c, d)]
-Row2: [compress_byte_array(e, f, g, h)]
-
-Compressed Table:
-compress_byte_array(a, b, c, d, e, f, g, h)
-
-Compressed Table:
-compress_byte_array(a, e, b, f, c, g, d, h)
-```
-
-### Performance gains
 
 | Format                                     | Bool OR | UInt8 OR | Bool AND | UInt8 AND | Bool NOT | UInt8 NOT | IF | Total  | Gain	|
 |--------------------------------------------|---------|----------|----------|-----------|----------|-----------|----|--------|---------|
