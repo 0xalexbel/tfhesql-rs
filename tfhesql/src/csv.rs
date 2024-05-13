@@ -76,7 +76,7 @@ fn data_type_to_string(data_type: &DataType) -> Result<String, String> {
         DataType::UInt32 => Ok("uint32".to_string()),
         DataType::UInt64 => Ok("uint64".to_string()),
         DataType::Utf8 => Ok("string".to_string()),
-        _ => Err("Unsupported DataType".to_string())
+        _ => Err("Unsupported DataType".to_string()),
     }
 }
 
@@ -101,12 +101,16 @@ fn infer_schema(
     res_or_csv_error!(fmt_res)
 }
 
-fn write_schema(schema:&Schema) -> String {
-    let v:Vec<String> = schema.fields().iter().map(|field_ref| {
-        let column_name_ref = field_ref.as_ref().name();
-        let data_type_str =  data_type_to_string(field_ref.data_type()).unwrap();
-        format!("{}:{}", column_name_ref, data_type_str)
-    }).collect();
+fn write_schema(schema: &Schema) -> String {
+    let v: Vec<String> = schema
+        .fields()
+        .iter()
+        .map(|field_ref| {
+            let column_name_ref = field_ref.as_ref().name();
+            let data_type_str = data_type_to_string(field_ref.data_type()).unwrap();
+            format!("{}:{}", column_name_ref, data_type_str)
+        })
+        .collect();
     v.join(",")
 }
 
@@ -185,6 +189,7 @@ pub fn record_batch_to_csv_string(batch: &arrow_array::RecordBatch) -> Result<St
 
     Ok(String::from_utf8(buffer)
         .unwrap()
+        //.trim_matches(|c| c == '\n' || c == '\r' || c == char::from(0))
         .trim_matches(char::from(0))
         .to_string())
 }
@@ -220,7 +225,7 @@ mod test {
         let mut s1 = std::fs::read_to_string("./test/data.csv").unwrap();
         s1.retain(|c| c != '\r');
         let s2 = record_batch_to_csv_string(t.batch()).unwrap();
-        assert_eq!(s1,s2);
+        assert_eq!(s1, s2);
 
         let t = load("./test/data.csv", Some((0, 1))).unwrap();
         let a: &BooleanArray = as_boolean_array(t.batch().column(0).as_ref());
