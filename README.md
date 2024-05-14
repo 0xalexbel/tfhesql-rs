@@ -102,6 +102,7 @@ Thus, significant efforts were directed towards optimizing performance to enable
 
 The SQL interpreter was deliberately tested less for the following reasons:
 - The extensive testing required.
+- Possibility of using external libs to simplify the boolean ops binary tree.
 - Users can optimize their queries, potentially nullifying the benefits of interpreter optimization.
 - Although the bounty focused on the SQL interpreter, the underlying issue primarily lay in server-side computation strategies rather than the interpreter itself.
 
@@ -125,8 +126,23 @@ Note: MSSQL type comparison specs are much more advanced.
 - Each node represents either a AND or a OR binary operation
 - Each leaf is a Numerical or ASCII comparison with the following properties
     - **Left Operand**: is an column identifier (encoded as a boolean mask)
-    - **Right Operand**: is a value (numerical or ASCII) or a column identifier
+    - **Right Operand**: is a value (numerical or ASCII) or a column identifier stored in a structure named ``SqlQueryRightBytes256`` 
     - **Operator**: can only either  =, >, <, >=, <= or != (6 possibilities)
+
+## Encoding the right operand
+
+One of the major optimisation lies on the type of data sent to the server. The goal was to maximize performance at the expense of 
+a bigger SQL Query size. The tradeoff appeared to be massively beneficial, and the relative large size of the request could be solved by using
+``CompressedFheBool`` types plus a global zip to reduce the size of the query.
+
+The right operand values are converted into 32xu8 values, each of these values are computed to produce 256 pre-calculated boolean pairs using the following formula:
+
+```
+With 0 <= i < 256
+Pair(0,value,i) = (value == i) 
+Pair(1,value,i) = (value > i) 
+```
+All the computed values are stored in a ``SqlQueryRightBytes256`` structure.
 
 ## Encrypted SQL Request format
 
