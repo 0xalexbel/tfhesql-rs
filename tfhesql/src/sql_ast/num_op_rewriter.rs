@@ -2,8 +2,7 @@ use super::{
     data_ident::DataIdent,
     data_value::DataValue,
     helpers::{
-        make_a_and_b, make_a_gt_b, make_a_gteq_b, make_a_lt_b, make_a_lteq_b, make_a_or_b,
-        make_minus_a, not_binary_op, reflexive_binary_op,
+        make_a_and_b, make_a_gt_b, make_a_gteq_b, make_a_lt_b, make_a_lteq_b, make_a_or_b, make_binary_op, make_minus_a, not_binary_op, reflexive_binary_op
     },
 };
 use crate::{
@@ -579,9 +578,15 @@ fn recursive_to_bool(
                 match op {
                     BinaryOperator::Eq | BinaryOperator::NotEq => {
                         if left.is_utf8_identifier(schema) && right.is_string_value() {
+                            if the_negated {
+                                *the_expr = make_binary_op(&left, not_binary_op(op), &right);
+                            }
                             return Ok(());
                         }
                         if right.is_utf8_identifier(schema) && left.is_string_value() {
+                            if the_negated {
+                                *the_expr = make_binary_op(&left, not_binary_op(op), &right);
+                            }
                             return Ok(());
                         }
                     }
@@ -793,6 +798,14 @@ mod test {
             Field::new("b_u", arrow_schema::DataType::UInt32, false),
             Field::new("c_u", arrow_schema::DataType::UInt32, false),
             Field::new("d_u", arrow_schema::DataType::UInt32, false),
+            Field::new("e_u", arrow_schema::DataType::UInt64, false),
+            Field::new("f_u", arrow_schema::DataType::UInt64, false),
+            Field::new("g_u", arrow_schema::DataType::UInt64, false),
+            Field::new("h_u", arrow_schema::DataType::UInt64, false),
+            Field::new("e_i", arrow_schema::DataType::Int64, false),
+            Field::new("f_i", arrow_schema::DataType::Int64, false),
+            Field::new("g_i", arrow_schema::DataType::Int64, false),
+            Field::new("h_i", arrow_schema::DataType::Int64, false),
         ])
     }
 
@@ -845,6 +858,13 @@ mod test {
             "(a_s IN ('ab', 'ac', 'cd'))",
             "(a_s IN ('ab', 'ac', 'cd', 'ef'))",
             "(a_s IN ('ab'))",
+            "(NOT(a_s = ''))",
+            "((NOT (a_i NOT BETWEEN 50 AND 99)) AND NOT(a_s = ''))",
+            "(NOT (a_s = b_s))",
+            "(NOT (a_s <> b_s))",
+            "(NOT (NOT (a_s = b_s)))",
+            "(NOT(NOT(e_i >= -9223372036854775808)))",
+            "(NOT(e_i >= -9223372036854775808))",
         ];
         let expected_result = [
             "(a_b > a_u)",
@@ -890,7 +910,14 @@ mod test {
             "((a_s = 'ab') OR (a_s = 'ac'))",
             "(((a_s = 'ab') OR (a_s = 'ac')) OR (a_s = 'cd'))",
             "(((a_s = 'ab') OR (a_s = 'ac')) OR ((a_s = 'cd') OR (a_s = 'ef')))",
-            "(a_s = 'ab')"
+            "(a_s = 'ab')",
+            "(a_s <> '')",
+            "(((((a_i >= 50) AND (a_i <= 99)) AND (50 <= 99)) OR (((a_i >= 99) AND (a_i <= 50)) AND (50 >= 99))) AND (a_s <> ''))",
+            "(a_s <> b_s)",
+            "(a_s = b_s)",
+            "(a_s = b_s)",
+            "(e_i >= -9223372036854775808)",
+            "(e_i < -9223372036854775808)",
         ];
         where_clauses
             .iter()
@@ -913,8 +940,8 @@ mod test {
     fn test_one() {
         let _e = "";
 
-        let w = "(a_s IN ('ab', 'ac'))";
-        let _e = "((a_s = 'ab') OR (a_s = 'ac'))";
+        let w = "(NOT (a_s = b_s))";
+        let _e = "(a_s <> b_s)";
 
         let where_str = _print_sql_test(w);
         println!("{}", where_str);

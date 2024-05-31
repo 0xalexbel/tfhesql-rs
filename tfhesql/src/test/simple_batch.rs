@@ -38,6 +38,21 @@ pub fn simple_batch_3() -> RecordBatch {
     rb.finish()
 }
 
+pub fn simple_batch_4() -> RecordBatch {
+    let mut rb = RecordBatchBuilder::new();
+    rb.push_str_with_name("SomeString", vec![""]);
+    rb.push_with_name::<UInt64Type>("SomeInteger", vec![10]);
+    rb.finish()
+}
+
+pub fn simple_batch_5() -> RecordBatch {
+    let mut rb = RecordBatchBuilder::new();
+    rb.push_with_name::<UInt32Type>("some_int", vec![0, 123, 3, 3]);
+    rb.push_bool_with_name("some_bool", vec![true, false, true, false]);
+    rb.push_str_with_name("some_str", vec!["first line", "some other line", "first line", "other test"]);
+    rb.finish()
+}
+
 pub struct RecordBatchBuilder {
     schema_builder: SchemaBuilder,
     arrays: Vec<ArrayRef>,

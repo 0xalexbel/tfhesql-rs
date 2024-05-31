@@ -1,11 +1,17 @@
 [package]
 name = "tfhesql-cli"
-version = "0.1.0"
-edition = "2021"
+description = "A basic CLI for running small SQL SELECT requests using tfhesql on .csv databases."
+version = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+keywords = { workspace = true }
+edition = { workspace = true }
 
 [dependencies]
 tfhesql = { path = "../tfhesql", features=["parallel", "stats"] }
-tfhe = { version = "0.5.1", features = [ "boolean", "shortint", "integer", "x86_64-unix" ] }
+tfhe = { workspace = true }
 clap = { version = "4.5.4", features = ["derive"] }
 clap_derive = "4.5.4"
 

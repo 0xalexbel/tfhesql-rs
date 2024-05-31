@@ -1,16 +1,20 @@
 [package]
 name = "tfhesql"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+version = { workspace = true }
+description = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+keywords = { workspace = true }
+edition = { workspace = true }
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }
 rand = { version = "0.8.5" }
 
 [dependencies]
-tfhe = { version = "0.5.1", features = [ "boolean", "shortint", "integer", "x86_64-unix" ] }
+tfhe = { workspace = true }
 rayon = { version = "1.8.1" }
 serde_json = { version = "1.0.113" }
 serde = { version = "1.0.194" }
@@ -21,16 +25,7 @@ arrow-schema = { version = "51.0.0", features = ["serde"] }
 arrow-cast = { version = "51.0.0", features = ["prettyprint"] }
 sqlparser = { version = "0.44.0", features = ["visitor"] }
 flate2 = { version = "1.0.30" }
-
-[profile.dev.package."*"]
-opt-level = 3
-debug = false
-split-debuginfo = '...'  # Platform-specific.
-strip = "none"
-debug-assertions = false
-overflow-checks = false
-incremental = false
-codegen-units = 16
+regex = { version = "1.10.4" }
 
 [[bench]]
 name = "benchmark"

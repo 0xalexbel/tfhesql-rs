@@ -4,6 +4,7 @@ use crate::Table;
 use arrow_schema::DataType;
 use arrow_schema::Field;
 use arrow_schema::Schema;
+use regex::Regex;
 use std::{fs::File, io::Seek, sync::Arc};
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -160,6 +161,7 @@ fn new_buf_reader(
     let mut reader_builder = arrow_csv::ReaderBuilder::new(Arc::new(schema))
         .with_header(true)
         .with_delimiter(DELIMITER)
+        .with_null_regex(Regex::new("matchnothing^").unwrap())
         .with_batch_size(lines);
 
     if let Some((start, end)) = bounds {
@@ -205,12 +207,12 @@ mod test {
     use arrow_array::*;
 
     #[test]
-    fn test_table_load() {
+    fn test_table_load1() {
         let v_bool = vec![true, false, true];
         let v_u32 = vec![12, 27, 32];
         let v_u64 = vec![12300, 1400, 256900];
         let v_i16: Vec<i16> = vec![-12, -13, 0];
-        let t = load("./test/data.csv", None).unwrap();
+        let t = load("./test/csv/data1.csv", None).unwrap();
         let a: &BooleanArray = as_boolean_array(t.batch().column(0).as_ref());
         assert_eq!(a, &BooleanArray::from(v_bool.clone()));
         let a: &StringArray = as_string_array(t.batch().column(1).as_ref());
@@ -222,12 +224,12 @@ mod test {
         let a: &Int16Array = as_primitive_array(t.batch().column(4).as_ref());
         assert_eq!(a, &Int16Array::from(v_i16.clone()));
 
-        let mut s1 = std::fs::read_to_string("./test/data.csv").unwrap();
+        let mut s1 = std::fs::read_to_string("./test/csv/data1.csv").unwrap();
         s1.retain(|c| c != '\r');
         let s2 = record_batch_to_csv_string(t.batch()).unwrap();
         assert_eq!(s1, s2);
 
-        let t = load("./test/data.csv", Some((0, 1))).unwrap();
+        let t = load("./test/csv/data1.csv", Some((0, 1))).unwrap();
         let a: &BooleanArray = as_boolean_array(t.batch().column(0).as_ref());
         assert_eq!(a, &BooleanArray::from(v_bool[0..1].to_vec()));
         let a: &StringArray = as_string_array(t.batch().column(1).as_ref());
@@ -238,5 +240,15 @@ mod test {
         assert_eq!(a, &UInt64Array::from(v_u64[0..1].to_vec()));
         let a: &Int16Array = as_primitive_array(t.batch().column(4).as_ref());
         assert_eq!(a, &Int16Array::from(v_i16[0..1].to_vec()));
+    }
+
+    #[test]
+    fn test_table_load2() {
+        let v_u64 = vec![10];
+        let t = load("./test/csv/data2.csv", None).unwrap();
+        let a: &StringArray = as_string_array(t.batch().column(0).as_ref());
+        assert_eq!(a, &StringArray::from(vec![""]));
+        let a: &UInt64Array = as_primitive_array(t.batch().column(1).as_ref());
+        assert_eq!(a, &UInt64Array::from(v_u64.clone()));
     }
 }
